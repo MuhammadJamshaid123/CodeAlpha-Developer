@@ -43,10 +43,18 @@ These apps are **full-stack Node.js servers** (Express + SQLite + Socket.io). Th
    - **Publish directory:** `deploy`
    - **Build command:** (leave default or empty)
 6. Click **Deploy site**
+7. **Important:** After deploy, copy your **actual URL** from the Netlify dashboard (e.g. `https://random-name-12345.netlify.app`). Do NOT use a guessed URL.
 
-Your Netlify URL will look like: `https://codealpha-developer.netlify.app`
+### Rename your site (optional)
 
-You can rename it under **Site settings → Domain management**.
+To get `https://codealpha-developer.netlify.app`:
+
+1. In Netlify dashboard → your site → **Domain management**
+2. Click **Options** on the `*.netlify.app` domain → **Edit site name**
+3. Enter: `codealpha-developer`
+4. Save — only works if the name is not already taken
+
+Your Netlify URL will look like: `https://YOUR-SITE-NAME.netlify.app` (from dashboard, not guessed)
 
 ---
 
