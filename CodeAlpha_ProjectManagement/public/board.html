@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Project Board - CodeAlpha PM</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/" class="logo">📋 CodeAlpha PM</a>
+    <span id="user-info"></span>
+  </nav>
+
+  <main class="container-wide">
+    <div class="board-header">
+      <a href="/" class="back">← Projects</a>
+      <h1 id="project-name"></h1>
+      <p id="project-desc"></p>
+      <button class="btn btn-outline btn-sm" onclick="showAddMember()">+ Add Member</button>
+    </div>
+
+    <div class="board" id="board">
+      <div class="column" data-status="todo">
+        <h3>To Do <button onclick="addTask('todo')">+</button></h3>
+        <div class="tasks" id="col-todo"></div>
+      </div>
+      <div class="column" data-status="inprogress">
+        <h3>In Progress <button onclick="addTask('inprogress')">+</button></h3>
+        <div class="tasks" id="col-inprogress"></div>
+      </div>
+      <div class="column" data-status="done">
+        <h3>Done <button onclick="addTask('done')">+</button></h3>
+        <div class="tasks" id="col-done"></div>
+      </div>
+    </div>
+  </main>
+
+  <div id="task-modal" class="modal hidden">
+    <div class="modal-content modal-lg">
+      <h2 id="task-title-display"></h2>
+      <div class="task-detail">
+        <label>Status</label>
+        <select id="task-status" onchange="updateTask()">
+          <option value="todo">To Do</option>
+          <option value="inprogress">In Progress</option>
+          <option value="done">Done</option>
+        </select>
+        <label>Assignee</label>
+        <select id="task-assignee" onchange="updateTask()"></select>
+        <label>Description</label>
+        <textarea id="task-desc" rows="3" onblur="updateTask()"></textarea>
+      </div>
+      <h3>Comments</h3>
+      <div id="task-comments"></div>
+      <form onsubmit="addComment(event)" class="comment-form">
+        <input id="comment-text" placeholder="Add a comment..." required>
+        <button type="submit" class="btn btn-primary">Send</button>
+      </form>
+      <button class="btn btn-outline" onclick="closeTaskModal()">Close</button>
+    </div>
+  </div>
+
+  <div id="member-modal" class="modal hidden">
+    <div class="modal-content">
+      <h2>Add Team Member</h2>
+      <select id="member-select"></select>
+      <button class="btn btn-primary" onclick="addMember()">Add</button>
+      <button class="btn btn-outline" onclick="document.getElementById('member-modal').classList.add('hidden')">Cancel</button>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/app.js"></script>
+  <script>
+    const projectId = new URLSearchParams(location.search).get('id');
+    let currentTaskId = null;
+    let allUsers = [];
+    let socket;
+
+    async function loadBoard() {
+      const data = await fetch(`/api/projects/${projectId}`).then(r => r.json());
+      document.getElementById('project-name').textContent = data.project.name;
+      document.getElementById('project-desc').textContent = data.project.description || '';
+      allUsers = await fetch('/api/users').then(r => r.json());
+
+      ['todo', 'inprogress', 'done'].forEach(status => {
+        const col = document.getElementById(`col-${status}`);
+        const tasks = data.tasks.filter(t => t.status === status);
+        col.innerHTML = tasks.map(t => renderTaskCard(t)).join('');
+      });
+
+      const me = await fetch('/api/me').then(r => r.json());
+      socket = io();
+      socket.emit('join-user', me.user.id);
+      socket.emit('join-project', projectId);
+      socket.on('task-updated', () => loadBoard());
+      socket.on('notification', (n) => showToast(n.message));
+    }
+
+    function renderTaskCard(t) {
+      return `<div class="task-card" onclick="openTask(${t.id})" draggable="true"
+        ondragstart="dragStart(event, ${t.id})" data-id="${t.id}">
+        <h4>${t.title}</h4>
+        ${t.assignee_name ? `<span class="assignee">@${t.assignee_name}</span>` : ''}
+      </div>`;
+    }
+
+    async function addTask(status) {
+      const title = prompt('Task title:');
+      if (!title) return;
+      await fetch(`/api/projects/${projectId}/tasks`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, status })
+      });
+      loadBoard();
+    }
+
+    async function openTask(id) {
+      currentTaskId = id;
+      const data = await fetch(`/api/projects/${projectId}`).then(r => r.json());
+      const task = data.tasks.find(t => t.id === id);
+      document.getElementById('task-title-display').textContent = task.title;
+      document.getElementById('task-status').value = task.status;
+      document.getElementById('task-desc').value = task.description || '';
+      document.getElementById('task-assignee').innerHTML = '<option value="">Unassigned</option>' +
+        allUsers.map(u => `<option value="${u.id}" ${u.id === task.assignee_id ? 'selected' : ''}>@${u.username}</option>`).join('');
+      const comments = await fetch(`/api/tasks/${id}/comments`).then(r => r.json());
+      document.getElementById('task-comments').innerHTML = comments.map(c =>
+        `<div class="comment"><strong>@${c.username}</strong> ${c.text} <small>${new Date(c.created_at).toLocaleString()}</small></div>`
+      ).join('');
+      document.getElementById('task-modal').classList.remove('hidden');
+    }
+
+    async function updateTask() {
+      await fetch(`/api/tasks/${currentTaskId}`, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: document.getElementById('task-status').value,
+          assignee_id: document.getElementById('task-assignee').value || null,
+          description: document.getElementById('task-desc').value
+        })
+      });
+      loadBoard();
+    }
+
+    async function addComment(e) {
+      e.preventDefault();
+      const text = document.getElementById('comment-text').value;
+      await fetch(`/api/tasks/${currentTaskId}/comments`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text })
+      });
+      document.getElementById('comment-text').value = '';
+      openTask(currentTaskId);
+    }
+
+    function closeTaskModal() { document.getElementById('task-modal').classList.add('hidden'); }
+
+    async function showAddMember() {
+      document.getElementById('member-select').innerHTML = allUsers.map(u => `<option value="${u.id}">@${u.username}</option>`).join('');
+      document.getElementById('member-modal').classList.remove('hidden');
+    }
+
+    async function addMember() {
+      const userId = document.getElementById('member-select').value;
+      await fetch(`/api/projects/${projectId}/members`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: Number(userId) })
+      });
+      document.getElementById('member-modal').classList.add('hidden');
+    }
+
+    function dragStart(e, taskId) { e.dataTransfer.setData('taskId', taskId); }
+
+    document.querySelectorAll('.column').forEach(col => {
+      col.addEventListener('dragover', e => e.preventDefault());
+      col.addEventListener('drop', async e => {
+        e.preventDefault();
+        const taskId = e.dataTransfer.getData('taskId');
+        const status = col.dataset.status;
+        await fetch(`/api/tasks/${taskId}`, {
+          method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status })
+        });
+        loadBoard();
+      });
+    });
+
+    function showToast(msg) {
+      const t = document.createElement('div');
+      t.className = 'toast';
+      t.textContent = msg;
+      document.body.appendChild(t);
+      setTimeout(() => t.remove(), 4000);
+    }
+
+    loadBoard();
+  </script>
+</body>
+</html>

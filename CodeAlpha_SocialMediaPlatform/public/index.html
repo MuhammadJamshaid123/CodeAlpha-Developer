@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CodeAlpha Social</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/" class="logo">💬 CodeAlpha Social</a>
+    <div class="nav-links">
+      <span id="user-info"></span>
+      <a href="/login.html" id="auth-link">Login</a>
+    </div>
+  </nav>
+
+  <main class="container">
+    <div id="compose" class="compose hidden">
+      <textarea id="post-content" placeholder="What's on your mind?" rows="3"></textarea>
+      <button class="btn btn-primary" onclick="createPost()">Post</button>
+    </div>
+    <div id="feed" class="feed"></div>
+  </main>
+
+  <script src="/js/app.js"></script>
+  <script>
+    async function loadFeed() {
+      const posts = await fetch('/api/posts').then(r => r.json());
+      document.getElementById('feed').innerHTML = posts.map(p => `
+        <div class="post-card">
+          <div class="post-header">
+            <a href="/profile.html?user=${p.username}" class="username">@${p.username}</a>
+            <span class="time">${new Date(p.created_at).toLocaleString()}</span>
+          </div>
+          <p class="post-content">${escapeHtml(p.content)}</p>
+          <div class="post-actions">
+            <button class="action-btn ${p.liked ? 'liked' : ''}" onclick="toggleLike(${p.id}, this)">
+              ❤️ ${p.like_count}
+            </button>
+            <a href="/post.html?id=${p.id}" class="action-btn">💬 ${p.comment_count}</a>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function createPost() {
+      const content = document.getElementById('post-content').value;
+      const res = await fetch('/api/posts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content })
+      });
+      if (res.ok) {
+        document.getElementById('post-content').value = '';
+        loadFeed();
+      } else {
+        const data = await res.json();
+        alert(data.error);
+      }
+    }
+
+    async function toggleLike(postId, btn) {
+      const me = await fetch('/api/me').then(r => r.json());
+      if (!me.user) { window.location.href = '/login.html'; return; }
+      const res = await fetch(`/api/posts/${postId}/like`, { method: 'POST' });
+      const data = await res.json();
+      btn.classList.toggle('liked', data.liked);
+      loadFeed();
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    loadFeed();
+  </script>
+</body>
+</html>

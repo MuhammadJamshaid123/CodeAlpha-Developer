@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shopping Cart - CodeAlpha Shop</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/" class="logo">🛒 CodeAlpha Shop</a>
+    <div class="nav-links">
+      <a href="/">Products</a>
+      <a href="/cart.html">Cart <span id="cart-count" class="badge">0</span></a>
+      <span id="user-info"></span>
+      <a href="/login.html" id="auth-link">Login</a>
+    </div>
+  </nav>
+
+  <main class="container">
+    <h1>Your Shopping Cart</h1>
+    <div id="cart-content"></div>
+  </main>
+
+  <script src="/js/app.js"></script>
+  <script>
+    async function loadCart() {
+      const res = await fetch('/api/cart');
+      const { items, total } = await res.json();
+      const el = document.getElementById('cart-content');
+
+      if (items.length === 0) {
+        el.innerHTML = '<p class="empty">Your cart is empty. <a href="/">Browse products</a></p>';
+        return;
+      }
+
+      el.innerHTML = `
+        <div class="cart-items">
+          ${items.map(item => `
+            <div class="cart-item">
+              <span class="item-image">${item.product.image || '📦'}</span>
+              <div class="item-info">
+                <h3>${item.product.name}</h3>
+                <p>$${item.product.price.toFixed(2)} each</p>
+              </div>
+              <div class="item-qty">
+                <button onclick="updateQty(${item.product.id}, ${item.quantity - 1})">−</button>
+                <span>${item.quantity}</span>
+                <button onclick="updateQty(${item.product.id}, ${item.quantity + 1})">+</button>
+              </div>
+              <span class="item-subtotal">$${item.subtotal.toFixed(2)}</span>
+              <button class="btn-remove" onclick="removeFromCart(${item.product.id})">✕</button>
+            </div>
+          `).join('')}
+        </div>
+        <div class="cart-summary">
+          <h2>Total: $${total.toFixed(2)}</h2>
+          <button class="btn btn-primary btn-lg" onclick="checkout()">Place Order</button>
+        </div>
+      `;
+    }
+
+    async function updateQty(productId, quantity) {
+      await fetch('/api/cart/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId, quantity })
+      });
+      loadCart();
+      updateCartCount();
+    }
+
+    async function removeFromCart(productId) {
+      await fetch('/api/cart/remove', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId })
+      });
+      loadCart();
+      updateCartCount();
+    }
+
+    async function checkout() {
+      const me = await fetch('/api/me').then(r => r.json());
+      if (!me.user) {
+        alert('Please login to place an order.');
+        window.location.href = '/login.html';
+        return;
+      }
+      const res = await fetch('/api/orders', { method: 'POST' });
+      const data = await res.json();
+      if (res.ok) {
+        alert(`Order #${data.orderId} placed successfully! Total: $${data.total.toFixed(2)}`);
+        window.location.href = '/orders.html';
+      } else {
+        alert(data.error || 'Checkout failed');
+      }
+    }
+
+    loadCart();
+  </script>
+</body>
+</html>

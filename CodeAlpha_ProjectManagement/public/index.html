@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CodeAlpha PM - Projects</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/" class="logo">📋 CodeAlpha PM</a>
+    <div class="nav-right">
+      <div id="notifications" class="notifications hidden">
+        <button onclick="toggleNotifs()">🔔 <span id="notif-count">0</span></button>
+        <div id="notif-list" class="notif-dropdown hidden"></div>
+      </div>
+      <span id="user-info"></span>
+      <a href="/login.html" id="auth-link">Login</a>
+    </div>
+  </nav>
+
+  <main class="container">
+    <div class="page-header">
+      <h1>My Projects</h1>
+      <button class="btn btn-primary" onclick="showCreateModal()">+ New Project</button>
+    </div>
+    <div id="projects-grid" class="projects-grid"></div>
+  </main>
+
+  <div id="create-modal" class="modal hidden">
+    <div class="modal-content">
+      <h2>Create Project</h2>
+      <input id="project-name" placeholder="Project name" required>
+      <textarea id="project-desc" placeholder="Description" rows="3"></textarea>
+      <div class="modal-actions">
+        <button class="btn btn-outline" onclick="hideCreateModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="createProject()">Create</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/app.js"></script>
+  <script>
+    async function loadProjects() {
+      const me = await fetch('/api/me').then(r => r.json());
+      if (!me.user) { window.location.href = '/login.html'; return; }
+
+      const projects = await fetch('/api/projects').then(r => r.json());
+      document.getElementById('projects-grid').innerHTML = projects.length ? projects.map(p => `
+        <a href="/board.html?id=${p.id}" class="project-card">
+          <h3>${p.name}</h3>
+          <p>${p.description || 'No description'}</p>
+          <span class="owner">by @${p.owner_name}</span>
+        </a>
+      `).join('') : '<p class="empty">No projects yet. Create your first project!</p>';
+    }
+
+    function showCreateModal() { document.getElementById('create-modal').classList.remove('hidden'); }
+    function hideCreateModal() { document.getElementById('create-modal').classList.add('hidden'); }
+
+    async function createProject() {
+      const name = document.getElementById('project-name').value;
+      const description = document.getElementById('project-desc').value;
+      if (!name) return;
+      await fetch('/api/projects', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, description })
+      });
+      hideCreateModal();
+      loadProjects();
+    }
+
+    loadProjects();
+  </script>
+</body>
+</html>

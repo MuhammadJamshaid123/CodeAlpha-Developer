@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Orders - CodeAlpha Shop</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/" class="logo">🛒 CodeAlpha Shop</a>
+    <div class="nav-links">
+      <a href="/">Products</a>
+      <a href="/cart.html">Cart <span id="cart-count" class="badge">0</span></a>
+      <a href="/orders.html">Orders</a>
+      <span id="user-info"></span>
+      <a href="/login.html" id="auth-link">Login</a>
+    </div>
+  </nav>
+
+  <main class="container">
+    <h1>My Orders</h1>
+    <div id="orders-list"></div>
+  </main>
+
+  <script src="/js/app.js"></script>
+  <script>
+    async function loadOrders() {
+      const me = await fetch('/api/me').then(r => r.json());
+      if (!me.user) {
+        window.location.href = '/login.html';
+        return;
+      }
+
+      const res = await fetch('/api/orders');
+      const orders = await res.json();
+      const el = document.getElementById('orders-list');
+
+      if (orders.length === 0) {
+        el.innerHTML = '<p class="empty">No orders yet. <a href="/">Start shopping</a></p>';
+        return;
+      }
+
+      el.innerHTML = orders.map(order => `
+        <div class="order-card">
+          <div class="order-header">
+            <strong>Order #${order.id}</strong>
+            <span class="status ${order.status}">${order.status}</span>
+            <span class="date">${new Date(order.created_at).toLocaleDateString()}</span>
+          </div>
+          <div class="order-items">
+            ${order.items.map(item => `
+              <div class="order-item">
+                <span>${item.image || '📦'}</span>
+                <span>${item.name} × ${item.quantity}</span>
+                <span>$${(item.price * item.quantity).toFixed(2)}</span>
+              </div>
+            `).join('')}
+          </div>
+          <div class="order-total">Total: $${order.total.toFixed(2)}</div>
+        </div>
+      `).join('');
+    }
+    loadOrders();
+  </script>
+</body>
+</html>

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Details - CodeAlpha Shop</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/" class="logo">🛒 CodeAlpha Shop</a>
+    <div class="nav-links">
+      <a href="/">Products</a>
+      <a href="/cart.html">Cart <span id="cart-count" class="badge">0</span></a>
+      <span id="user-info"></span>
+      <a href="/login.html" id="auth-link">Login</a>
+    </div>
+  </nav>
+
+  <main class="container">
+    <div id="product-detail" class="product-detail"></div>
+  </main>
+
+  <script src="/js/app.js"></script>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get('id');
+
+    async function loadProduct() {
+      const res = await fetch(`/api/products/${id}`);
+      if (!res.ok) {
+        document.getElementById('product-detail').innerHTML = '<p>Product not found.</p>';
+        return;
+      }
+      const p = await res.json();
+      document.title = `${p.name} - CodeAlpha Shop`;
+      document.getElementById('product-detail').innerHTML = `
+        <a href="/" class="back-link">← Back to products</a>
+        <div class="detail-card">
+          <div class="detail-image">${p.image || '📦'}</div>
+          <div class="detail-info">
+            <h1>${p.name}</h1>
+            <p class="price large">$${p.price.toFixed(2)}</p>
+            <p class="description">${p.description}</p>
+            <div class="quantity-row">
+              <label>Quantity:</label>
+              <input type="number" id="qty" value="1" min="1" max="99">
+            </div>
+            <button class="btn btn-primary btn-lg" onclick="addToCart(${p.id}, document.getElementById('qty').value)">
+              Add to Cart
+            </button>
+          </div>
+        </div>
+      `;
+    }
+    loadProduct();
+  </script>
+</body>
+</html>

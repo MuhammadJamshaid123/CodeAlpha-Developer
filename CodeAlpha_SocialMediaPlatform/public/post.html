@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Post - CodeAlpha Social</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/" class="logo">💬 CodeAlpha Social</a>
+    <div class="nav-links"><span id="user-info"></span><a href="/login.html" id="auth-link">Login</a></div>
+  </nav>
+  <main class="container">
+    <a href="/" class="back">← Back to feed</a>
+    <div id="post-detail"></div>
+    <div id="comments-section"></div>
+  </main>
+  <script src="/js/app.js"></script>
+  <script>
+    const postId = new URLSearchParams(location.search).get('id');
+    async function loadPost() {
+      const post = await fetch(`/api/posts/${postId}`).then(r => r.json());
+      document.getElementById('post-detail').innerHTML = `
+        <div class="post-card">
+          <div class="post-header">
+            <a href="/profile.html?user=${post.username}">@${post.username}</a>
+            <span>${new Date(post.created_at).toLocaleString()}</span>
+          </div>
+          <p class="post-content">${post.content}</p>
+          <button class="action-btn ${post.liked ? 'liked' : ''}" onclick="toggleLike()">❤️ ${post.like_count}</button>
+        </div>`;
+      document.getElementById('comments-section').innerHTML = `
+        <h3>Comments (${post.comments.length})</h3>
+        <form id="comment-form" class="comment-form" onsubmit="addComment(event)">
+          <input name="text" placeholder="Write a comment..." required>
+          <button type="submit" class="btn btn-primary">Comment</button>
+        </form>
+        <div class="comments-list">
+          ${post.comments.map(c => `
+            <div class="comment">
+              <strong>@${c.username}</strong>
+              <span>${c.text}</span>
+              <small>${new Date(c.created_at).toLocaleString()}</small>
+            </div>`).join('')}
+        </div>`;
+    }
+    async function toggleLike() {
+      await fetch(`/api/posts/${postId}/like`, { method: 'POST' });
+      loadPost();
+    }
+    async function addComment(e) {
+      e.preventDefault();
+      const text = e.target.text.value;
+      const res = await fetch(`/api/posts/${postId}/comments`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text })
+      });
+      if (!res.ok) { alert((await res.json()).error); window.location.href = '/login.html'; return; }
+      loadPost();
+    }
+    loadPost();
+  </script>
+</body>
+</html>

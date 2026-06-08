@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CodeAlpha Connect</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/" class="logo">📹 CodeAlpha Connect</a>
+    <div class="nav-links">
+      <span id="user-info"></span>
+      <a href="/login.html" id="auth-link">Login</a>
+    </div>
+  </nav>
+
+  <main class="container">
+    <header class="hero">
+      <h1>Real-Time Communication</h1>
+      <p>Video calling, screen sharing, file sharing & collaborative whiteboard</p>
+    </header>
+
+    <div class="features">
+      <div class="feature">🎥 Multi-user video calling (WebRTC)</div>
+      <div class="feature">🖥️ Screen sharing</div>
+      <div class="feature">📁 File sharing</div>
+      <div class="feature">✏️ Collaborative whiteboard</div>
+      <div class="feature">🔒 AES-256 data encryption</div>
+    </div>
+
+    <div class="room-actions">
+      <button class="btn btn-primary btn-lg" onclick="createRoom()">Create New Room</button>
+      <div class="join-form">
+        <input id="room-id-input" placeholder="Enter room ID to join">
+        <button class="btn btn-outline" onclick="joinRoom()">Join Room</button>
+      </div>
+    </div>
+
+    <div id="rooms-list"></div>
+  </main>
+
+  <script src="/js/app.js"></script>
+  <script>
+    async function createRoom() {
+      const me = await fetch('/api/me').then(r => r.json());
+      if (!me.user) { location.href = '/login.html'; return; }
+      const name = prompt('Room name (optional):') || '';
+      const res = await fetch('/api/rooms', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name })
+      });
+      const data = await res.json();
+      location.href = `/room.html?id=${data.roomId}`;
+    }
+
+    function joinRoom() {
+      const id = document.getElementById('room-id-input').value.trim();
+      if (id) location.href = `/room.html?id=${id}`;
+    }
+
+    async function loadRooms() {
+      const me = await fetch('/api/me').then(r => r.json());
+      if (!me.user) return;
+      const rooms = await fetch('/api/rooms').then(r => r.json());
+      document.getElementById('rooms-list').innerHTML = rooms.length ? `
+        <h2>Recent Rooms</h2>
+        <div class="rooms-grid">${rooms.map(r => `
+          <a href="/room.html?id=${r.id}" class="room-card">
+            <h3>${r.name}</h3>
+            <span>ID: ${r.id}</span>
+            <span>Host: @${r.host_name}</span>
+          </a>`).join('')}
+        </div>` : '';
+    }
+    loadRooms();
+  </script>
+</body>
+</html>

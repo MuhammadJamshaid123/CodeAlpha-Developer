@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile - CodeAlpha Social</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/" class="logo">💬 CodeAlpha Social</a>
+    <div class="nav-links">
+      <span id="user-info"></span>
+      <a href="/login.html" id="auth-link">Login</a>
+    </div>
+  </nav>
+  <main class="container">
+    <div id="profile"></div>
+    <div id="user-posts" class="feed"></div>
+  </main>
+  <script src="/js/app.js"></script>
+  <script>
+    const username = new URLSearchParams(location.search).get('user');
+    async function loadProfile() {
+      const data = await fetch(`/api/users/${username}`).then(r => r.json());
+      if (data.error) { document.getElementById('profile').innerHTML = '<p>User not found</p>'; return; }
+      const me = await fetch('/api/me').then(r => r.json());
+      const isOwn = me.user && me.user.username === username;
+      document.getElementById('profile').innerHTML = `
+        <div class="profile-card">
+          <div class="avatar">${username[0].toUpperCase()}</div>
+          <div class="profile-info">
+            <h1>@${data.user.username}</h1>
+            <p class="bio">${data.user.bio || 'No bio yet'}</p>
+            <div class="stats">
+              <span><strong>${data.posts.length}</strong> posts</span>
+              <span><strong>${data.followerCount}</strong> followers</span>
+              <span><strong>${data.followingCount}</strong> following</span>
+            </div>
+            ${isOwn ? `<textarea id="bio-edit" rows="2">${data.user.bio || ''}</textarea><button class="btn btn-primary" onclick="saveBio()">Save Bio</button>` :
+              me.user ? `<button class="btn ${data.isFollowing ? 'btn-outline' : 'btn-primary'}" onclick="toggleFollow()">${data.isFollowing ? 'Unfollow' : 'Follow'}</button>` : ''}
+          </div>
+        </div>`;
+      document.getElementById('user-posts').innerHTML = data.posts.map(p => `
+        <div class="post-card">
+          <p class="post-content">${p.content}</p>
+          <div class="post-meta">❤️ ${p.like_count} · ${new Date(p.created_at).toLocaleString()}</div>
+        </div>`).join('');
+    }
+    async function toggleFollow() {
+      await fetch(`/api/users/${username}/follow`, { method: 'POST' });
+      loadProfile();
+    }
+    async function saveBio() {
+      await fetch('/api/profile', { method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bio: document.getElementById('bio-edit').value }) });
+      loadProfile();
+    }
+    loadProfile();
+  </script>
+</body>
+</html>

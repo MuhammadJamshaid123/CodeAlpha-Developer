@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Room - CodeAlpha Connect</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="room-page">
+  <nav class="navbar">
+    <span class="logo">📹 Room: <span id="room-id-display"></span></span>
+    <div class="room-controls">
+      <button class="btn btn-sm" onclick="toggleMic()" id="mic-btn">🎤 Mute</button>
+      <button class="btn btn-sm" onclick="toggleCam()" id="cam-btn">📷 Cam Off</button>
+      <button class="btn btn-sm btn-accent" id="screen-btn" onclick="shareScreen()">🖥️ Share Screen</button>
+      <button class="btn btn-sm" onclick="document.getElementById('file-input').click()">📁 Share File</button>
+      <input type="file" id="file-input" hidden onchange="shareFile(event)">
+      <button class="btn btn-sm btn-danger" onclick="leaveRoom()">Leave</button>
+    </div>
+  </nav>
+
+  <div class="room-layout">
+    <div class="video-section">
+      <div id="videos" class="video-grid">
+        <div class="video-wrapper local">
+          <video id="local-video" autoplay muted playsinline></video>
+          <span class="video-label" id="local-label">You</span>
+        </div>
+      </div>
+      <div class="chat-panel">
+        <div id="chat-messages" class="chat-messages"></div>
+        <form onsubmit="sendChat(event)" class="chat-input">
+          <input id="chat-text" placeholder="Type a message..." required>
+          <button type="submit" class="btn btn-primary">Send</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="whiteboard-section">
+      <div class="wb-toolbar">
+        <span>Whiteboard</span>
+        <input type="color" id="wb-color" value="#000000">
+        <input type="range" id="wb-size" min="1" max="20" value="3">
+        <button class="btn btn-sm" onclick="clearWhiteboard()">Clear</button>
+      </div>
+      <canvas id="whiteboard"></canvas>
+    </div>
+  </div>
+
+  <div id="files-panel" class="files-panel">
+    <h4>Shared Files</h4>
+    <div id="shared-files"></div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/webrtc.js"></script>
+</body>
+</html>
