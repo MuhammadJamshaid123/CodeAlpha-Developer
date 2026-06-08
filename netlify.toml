@@ -1,0 +1,9 @@
+[build]
+  publish = "deploy"
+  command = "echo 'Static landing page — apps run on Render'"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"

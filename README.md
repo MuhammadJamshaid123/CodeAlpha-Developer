@@ -44,6 +44,18 @@ Per CodeAlpha instructions:
 3. Submit via the WhatsApp group form
 4. Complete minimum 2–3 tasks (all 4 are included here)
 
+## Live Deployment
+
+See [DEPLOY.md](./DEPLOY.md) for step-by-step instructions.
+
+| Project | Live URL |
+|---------|----------|
+| Landing Page (Netlify) | Deploy from repo — see DEPLOY.md |
+| E-commerce Store | https://codealpha-ecommerce.onrender.com |
+| Social Media | https://codealpha-social.onrender.com |
+| Project Management | https://codealpha-pm.onrender.com |
+| Real-Time Communication | https://codealpha-rtc.onrender.com |
+
 ## Contact
 
 - Website: [www.codealpha.tech](https://www.codealpha.tech)

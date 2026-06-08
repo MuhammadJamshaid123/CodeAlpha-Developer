@@ -8,11 +8,20 @@ const db = require('./db');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
+const io = new Server(server, { cors: { origin: true, credentials: true } });
 const PORT = process.env.PORT || 3003;
 
+app.set('trust proxy', 1);
 app.use(express.json());
-app.use(session({ secret: 'codealpha-pm-secret', resave: false, saveUninitialized: false }));
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'codealpha-pm-secret',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax'
+  }
+}));
 app.use(express.static(path.join(__dirname, 'public')));
 
 function requireAuth(req, res, next) {

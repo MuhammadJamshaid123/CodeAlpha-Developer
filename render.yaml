@@ -1,0 +1,44 @@
+services:
+  - type: web
+    name: codealpha-ecommerce
+    runtime: node
+    rootDir: CodeAlpha_EcommerceStore
+    buildCommand: npm install
+    startCommand: npm start
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+
+  - type: web
+    name: codealpha-social
+    runtime: node
+    rootDir: CodeAlpha_SocialMediaPlatform
+    buildCommand: npm install
+    startCommand: npm start
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+
+  - type: web
+    name: codealpha-pm
+    runtime: node
+    rootDir: CodeAlpha_ProjectManagement
+    buildCommand: npm install
+    startCommand: npm start
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+
+  - type: web
+    name: codealpha-rtc
+    runtime: node
+    rootDir: CodeAlpha_RealTimeCommunication
+    buildCommand: npm install
+    startCommand: npm start
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production

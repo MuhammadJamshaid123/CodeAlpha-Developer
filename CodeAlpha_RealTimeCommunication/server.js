@@ -12,7 +12,7 @@ const db = require('./db');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
+const io = new Server(server, { cors: { origin: true, credentials: true } });
 const PORT = process.env.PORT || 3004;
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'codealpha-secure-key-2024';
 
@@ -25,8 +25,17 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } });
 
+app.set('trust proxy', 1);
 app.use(express.json());
-app.use(session({ secret: 'codealpha-rtc-secret', resave: false, saveUninitialized: false }));
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'codealpha-rtc-secret',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax'
+  }
+}));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(uploadsDir));
 

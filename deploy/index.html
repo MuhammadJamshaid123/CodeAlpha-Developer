@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CodeAlpha Developer — Live Projects</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
+      color: #e0e0e0;
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+    .container { max-width: 960px; margin: 0 auto; }
+    header { text-align: center; margin-bottom: 3rem; }
+    header h1 { font-size: 2.2rem; color: #7c83fd; margin-bottom: 0.5rem; }
+    header p { color: #888; font-size: 1.05rem; }
+    .badge {
+      display: inline-block;
+      background: #2d6a4f;
+      color: #fff;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      margin-top: 1rem;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+    .card {
+      background: rgba(26, 26, 46, 0.9);
+      border: 1px solid #2a2a4a;
+      border-radius: 12px;
+      padding: 1.5rem;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .card:hover { border-color: #7c83fd; transform: translateY(-2px); }
+    .card h2 { color: #7c83fd; font-size: 1.2rem; margin-bottom: 0.5rem; }
+    .card .task { color: #666; font-size: 0.85rem; margin-bottom: 0.75rem; }
+    .card p { color: #aaa; font-size: 0.9rem; line-height: 1.5; margin-bottom: 1rem; }
+    .tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1rem; }
+    .tag { background: #0f0f1a; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; color: #888; }
+    .btn {
+      display: inline-block;
+      background: #7c83fd;
+      color: white;
+      text-decoration: none;
+      padding: 0.6rem 1.25rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+    .btn:hover { background: #6b72e8; }
+    footer {
+      text-align: center;
+      margin-top: 3rem;
+      padding-top: 2rem;
+      border-top: 1px solid #2a2a4a;
+      color: #666;
+      font-size: 0.85rem;
+    }
+    footer a { color: #7c83fd; text-decoration: none; }
+    .note {
+      background: rgba(124, 131, 253, 0.1);
+      border: 1px solid rgba(124, 131, 253, 0.3);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 2rem;
+      font-size: 0.9rem;
+      color: #aaa;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>CodeAlpha Developer</h1>
+      <p>Full Stack Development Internship — All 4 Live Projects</p>
+      <span class="badge">Muhammad Jamshaid</span>
+    </header>
+
+    <div class="note">
+      Free-tier apps may take ~30 seconds to wake up on first visit. Register a new account on each app to get started.
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="task">Task 1</div>
+        <h2>E-commerce Store</h2>
+        <p>Shopping cart, product details, order processing, and user authentication.</p>
+        <div class="tags"><span class="tag">Express</span><span class="tag">SQLite</span><span class="tag">Sessions</span></div>
+        <a class="btn" href="https://codealpha-ecommerce.onrender.com" target="_blank" rel="noopener">Open Live App →</a>
+      </div>
+
+      <div class="card">
+        <div class="task">Task 2</div>
+        <h2>Social Media Platform</h2>
+        <p>User profiles, posts, comments, likes, and follow system.</p>
+        <div class="tags"><span class="tag">Express</span><span class="tag">SQLite</span><span class="tag">REST API</span></div>
+        <a class="btn" href="https://codealpha-social.onrender.com" target="_blank" rel="noopener">Open Live App →</a>
+      </div>
+
+      <div class="card">
+        <div class="task">Task 3</div>
+        <h2>Project Management Tool</h2>
+        <p>Trello-like boards, task assignment, comments, and real-time WebSocket notifications.</p>
+        <div class="tags"><span class="tag">Socket.io</span><span class="tag">Express</span><span class="tag">SQLite</span></div>
+        <a class="btn" href="https://codealpha-pm.onrender.com" target="_blank" rel="noopener">Open Live App →</a>
+      </div>
+
+      <div class="card">
+        <div class="task">Task 4</div>
+        <h2>Real-Time Communication</h2>
+        <p>Video calling, screen sharing, file sharing, whiteboard, and AES encryption.</p>
+        <div class="tags"><span class="tag">WebRTC</span><span class="tag">Socket.io</span><span class="tag">WebSockets</span></div>
+        <a class="btn" href="https://codealpha-rtc.onrender.com" target="_blank" rel="noopener">Open Live App →</a>
+      </div>
+    </div>
+
+    <footer>
+      <p>
+        <a href="https://github.com/MuhammadJamshaid123/CodeAlpha-Developer" target="_blank" rel="noopener">GitHub Repository</a>
+        &nbsp;·&nbsp;
+        <a href="https://www.codealpha.tech" target="_blank" rel="noopener">CodeAlpha</a>
+      </p>
+      <p style="margin-top:0.5rem">Built with Node.js, Express, SQLite, Socket.io &amp; WebRTC</p>
+    </footer>
+  </div>
+</body>
+</html>
