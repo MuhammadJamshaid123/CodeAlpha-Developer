@@ -12,6 +12,7 @@ async function initAuth() {
       authLink.onclick = async (e) => {
         e.preventDefault();
         await apiFetch('/api/logout', { method: 'POST' });
+        clearAuth();
         location.href = '/login.html';
       };
     }

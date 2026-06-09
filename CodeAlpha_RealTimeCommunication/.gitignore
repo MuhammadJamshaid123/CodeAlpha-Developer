@@ -3,3 +3,4 @@ uploads/
 *.sqlite3
 .env
 .DS_Store
+.netlify/

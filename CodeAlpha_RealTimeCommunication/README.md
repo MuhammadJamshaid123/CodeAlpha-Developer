@@ -35,3 +35,13 @@ Open [http://localhost:3004](http://localhost:3004)
 4. Share screen, files, and draw on the whiteboard
 
 > **Note:** WebRTC works best on localhost or HTTPS. For production, deploy behind HTTPS.
+
+## Live Deployment
+
+| Platform | URL | Purpose |
+|----------|-----|---------|
+| **Netlify** | https://codealpha-realtimecommunication.netlify.app | Static frontend (UI) |
+| **Render** | https://codealpha-realtimecommunication.onrender.com | Full backend (API, Socket.io, WebRTC) |
+
+Deploy frontend: `netlify deploy --prod --dir=public`
+Deploy backend: Connect this repo on [Render](https://dashboard.render.com) (uses `render.yaml`).

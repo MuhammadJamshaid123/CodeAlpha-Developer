@@ -43,16 +43,18 @@
       const f = e.target;
       const res = await apiFetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: f.username.value, password: f.password.value }) });
-      if (res.ok) location.href = '/';
-      else document.getElementById('login-error').textContent = (await res.json()).error;
+      if (res.ok) { saveAuth(await res.json()); location.href = '/'; return; }
+      const err = await res.json().catch(() => ({}));
+      document.getElementById('login-error').textContent = err.error || 'Cannot reach server. Deploy backend on Render first.';
     }
     async function handleRegister(e) {
       e.preventDefault();
       const f = e.target;
       const res = await apiFetch('/api/register', { method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: f.username.value, password: f.password.value }) });
-      if (res.ok) location.href = '/';
-      else document.getElementById('register-error').textContent = (await res.json()).error;
+      if (res.ok) { saveAuth(await res.json()); location.href = '/'; return; }
+      const err = await res.json().catch(() => ({}));
+      document.getElementById('register-error').textContent = err.error || 'Cannot reach server. Deploy backend on Render first.';
     }
   </script>
 </body>

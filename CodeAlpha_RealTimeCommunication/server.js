@@ -1,6 +1,7 @@
 const express = require('express');
 const session = require('express-session');
 const http = require('http');
+const crypto = require('crypto');
 const { Server } = require('socket.io');
 const path = require('path');
 const fs = require('fs');
@@ -41,7 +42,7 @@ app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Credentials', 'true');
   }
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.sendStatus(204);
   next();
 });
@@ -64,8 +65,28 @@ function encryptData(data) {
   return CryptoJS.AES.encrypt(JSON.stringify(data), ENCRYPTION_KEY).toString();
 }
 
+function createToken(userId) {
+  const token = crypto.randomBytes(32).toString('hex');
+  db.prepare('INSERT INTO auth_tokens (token, user_id) VALUES (?, ?)').run(token, userId);
+  return token;
+}
+
+function getUserFromRequest(req) {
+  if (req.session.userId) return { id: req.session.userId, username: req.session.username };
+  const auth = req.headers.authorization;
+  if (auth?.startsWith('Bearer ')) {
+    const row = db.prepare(
+      'SELECT u.id, u.username FROM auth_tokens t JOIN users u ON u.id = t.user_id WHERE t.token = ?'
+    ).get(auth.slice(7));
+    if (row) return { id: row.id, username: row.username };
+  }
+  return null;
+}
+
 function requireAuth(req, res, next) {
-  if (!req.session.userId) return res.status(401).json({ error: 'Login required' });
+  const user = getUserFromRequest(req);
+  if (!user) return res.status(401).json({ error: 'Login required' });
+  req.user = user;
   next();
 }
 
@@ -76,7 +97,8 @@ app.post('/api/register', (req, res) => {
     const result = db.prepare('INSERT INTO users (username, password) VALUES (?, ?)').run(username, hash);
     req.session.userId = result.lastInsertRowid;
     req.session.username = username;
-    res.json({ success: true, username });
+    const token = createToken(result.lastInsertRowid);
+    res.json({ success: true, username, token });
   } catch (e) {
     res.status(400).json({ error: 'Username already exists' });
   }
@@ -89,19 +111,31 @@ app.post('/api/login', (req, res) => {
   }
   req.session.userId = user.id;
   req.session.username = user.username;
-  res.json({ success: true, username: user.username });
+  const token = createToken(user.id);
+  res.json({ success: true, username: user.username, token });
 });
 
-app.post('/api/logout', (req, res) => { req.session.destroy(); res.json({ success: true }); });
+app.post('/api/logout', (req, res) => {
+  const auth = req.headers.authorization;
+  if (auth?.startsWith('Bearer ')) {
+    db.prepare('DELETE FROM auth_tokens WHERE token = ?').run(auth.slice(7));
+  }
+  req.session.destroy();
+  res.json({ success: true });
+});
+
+app.get('/api/health', (req, res) => res.json({ ok: true }));
+
 app.get('/api/me', (req, res) => {
-  if (!req.session.userId) return res.json({ user: null });
-  res.json({ user: { id: req.session.userId, username: req.session.username } });
+  const user = getUserFromRequest(req);
+  if (!user) return res.json({ user: null });
+  res.json({ user: { id: user.id, username: user.username } });
 });
 
 app.post('/api/rooms', requireAuth, (req, res) => {
   const roomId = uuidv4().slice(0, 8);
   const { name } = req.body;
-  db.prepare('INSERT INTO rooms (id, name, host_id) VALUES (?, ?, ?)').run(roomId, name || `Room ${roomId}`, req.session.userId);
+  db.prepare('INSERT INTO rooms (id, name, host_id) VALUES (?, ?, ?)').run(roomId, name || `Room ${roomId}`, req.user.id);
   rooms.set(roomId, { participants: new Map(), whiteboard: [] });
   res.json({ roomId, name: name || `Room ${roomId}` });
 });
@@ -113,7 +147,7 @@ app.get('/api/rooms', requireAuth, (req, res) => {
 
 app.post('/api/upload', requireAuth, upload.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-  const encryptedMeta = encryptData({ filename: req.file.originalname, size: req.file.size, uploader: req.session.username });
+  const encryptedMeta = encryptData({ filename: req.file.originalname, size: req.file.size, uploader: req.user.username });
   res.json({
     url: `/uploads/${req.file.filename}`,
     filename: req.file.originalname,
