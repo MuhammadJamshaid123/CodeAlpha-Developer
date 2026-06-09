@@ -49,8 +49,10 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f0f1a; colo
 .chat-input { display: flex; gap: 0.5rem; padding: 0.5rem; }
 .chat-input input { flex: 1; padding: 0.5rem; border: 1px solid #2a2a4a; border-radius: 6px; background: #1a1a2e; color: white; }
 .whiteboard-section { border-left: 1px solid #2a2a4a; display: flex; flex-direction: column; }
-.wb-toolbar { padding: 0.5rem; display: flex; gap: 0.5rem; align-items: center; background: #1a1a2e; border-bottom: 1px solid #2a2a4a; }
+.wb-toolbar { padding: 0.5rem; display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; background: #1a1a2e; border-bottom: 1px solid #2a2a4a; }
+.wb-tool.active { background: #7c83fd; color: white; }
 #whiteboard { flex: 1; background: white; cursor: crosshair; touch-action: none; }
+#whiteboard.text-mode { cursor: text; }
 .files-panel { position: fixed; bottom: 0; left: 0; width: 300px; max-height: 150px; overflow-y: auto; background: #1a1a2e; border: 1px solid #2a2a4a; border-radius: 0 8px 0 0; padding: 0.5rem; font-size: 0.85rem; }
 .shared-file { padding: 0.25rem 0; }
 .shared-file a { color: #7c83fd; }

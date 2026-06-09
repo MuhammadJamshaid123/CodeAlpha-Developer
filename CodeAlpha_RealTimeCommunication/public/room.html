@@ -39,6 +39,8 @@
     <div class="whiteboard-section">
       <div class="wb-toolbar">
         <span>Whiteboard</span>
+        <button class="btn btn-sm wb-tool active" id="wb-draw-btn" onclick="setWbTool('draw')">✏️ Draw</button>
+        <button class="btn btn-sm wb-tool" id="wb-text-btn" onclick="setWbTool('text')">🔤 Text</button>
         <input type="color" id="wb-color" value="#000000">
         <input type="range" id="wb-size" min="1" max="20" value="3">
         <button class="btn btn-sm" onclick="clearWhiteboard()">Clear</button>
@@ -52,7 +54,8 @@
     <div id="shared-files"></div>
   </div>
 
-  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+  <script src="/js/config.js"></script>
   <script src="/js/webrtc.js"></script>
 </body>
 </html>

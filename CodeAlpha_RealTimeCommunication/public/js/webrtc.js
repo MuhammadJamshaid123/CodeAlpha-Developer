@@ -1,5 +1,5 @@
 const roomId = new URLSearchParams(location.search).get('id');
-const socket = io();
+const socket = io(window.SOCKET_URL || undefined, { withCredentials: true });
 const peers = {};
 const iceQueues = {};
 let localStream = null;
@@ -20,7 +20,7 @@ async function flushIceQueue(socketId) {
 }
 
 async function init() {
-  const me = await fetch('/api/me').then(r => r.json());
+  const me = await apiFetch('/api/me').then(r => r.json());
   if (!me.user) { location.href = '/login.html'; return; }
   username = me.user.username;
   document.getElementById('room-id-display').textContent = roomId;
@@ -171,7 +171,7 @@ async function shareFile(e) {
   if (!file) return;
   const formData = new FormData();
   formData.append('file', file);
-  const res = await fetch('/api/upload', { method: 'POST', body: formData });
+  const res = await apiFetch('/api/upload', { method: 'POST', body: formData });
   const data = await res.json();
   socket.emit('file-shared', { roomId, file: { url: data.url, filename: data.filename, encrypted: data.encrypted } });
   addSharedFile({ ...data, sharedBy: username });
@@ -204,6 +204,15 @@ function addChatMessage(uname, message, time, encrypted) {
   el.scrollTop = el.scrollHeight;
 }
 
+let wbTool = 'draw';
+
+function setWbTool(tool) {
+  wbTool = tool;
+  document.getElementById('wb-draw-btn').classList.toggle('active', tool === 'draw');
+  document.getElementById('wb-text-btn').classList.toggle('active', tool === 'text');
+  document.getElementById('whiteboard').classList.toggle('text-mode', tool === 'text');
+}
+
 function setupWhiteboard() {
   const canvas = document.getElementById('whiteboard');
   const ctx = canvas.getContext('2d');
@@ -212,14 +221,30 @@ function setupWhiteboard() {
   let drawing = false;
   let lastX = 0, lastY = 0;
 
+  function emitDraw(data) {
+    drawOnCanvas(data);
+    socket.emit('whiteboard-draw', { roomId, data });
+  }
+
   function drawStroke(x1, y1, x2, y2) {
-    const data = {
+    emitDraw({
+      type: 'stroke',
       x1, y1, x2, y2,
       color: document.getElementById('wb-color').value,
       size: document.getElementById('wb-size').value
-    };
-    drawOnCanvas(data);
-    socket.emit('whiteboard-draw', { roomId, data });
+    });
+  }
+
+  function placeText(x, y) {
+    const text = prompt('Enter text for whiteboard:');
+    if (!text?.trim()) return;
+    emitDraw({
+      type: 'text',
+      x, y,
+      text: text.trim(),
+      color: document.getElementById('wb-color').value,
+      size: Math.max(14, document.getElementById('wb-size').value * 4)
+    });
   }
 
   function getPos(e) {
@@ -228,9 +253,13 @@ function setupWhiteboard() {
     return [touch.clientX - rect.left, touch.clientY - rect.top];
   }
 
-  canvas.addEventListener('mousedown', (e) => { drawing = true; [lastX, lastY] = [e.offsetX, e.offsetY]; });
+  canvas.addEventListener('mousedown', (e) => {
+    if (wbTool === 'text') { placeText(e.offsetX, e.offsetY); return; }
+    drawing = true;
+    [lastX, lastY] = [e.offsetX, e.offsetY];
+  });
   canvas.addEventListener('mousemove', (e) => {
-    if (!drawing) return;
+    if (!drawing || wbTool !== 'draw') return;
     drawStroke(lastX, lastY, e.offsetX, e.offsetY);
     [lastX, lastY] = [e.offsetX, e.offsetY];
   });
@@ -239,12 +268,14 @@ function setupWhiteboard() {
 
   canvas.addEventListener('touchstart', (e) => {
     e.preventDefault();
+    const [x, y] = getPos(e);
+    if (wbTool === 'text') { placeText(x, y); return; }
     drawing = true;
-    [lastX, lastY] = getPos(e);
+    [lastX, lastY] = [x, y];
   });
   canvas.addEventListener('touchmove', (e) => {
     e.preventDefault();
-    if (!drawing) return;
+    if (!drawing || wbTool !== 'draw') return;
     const [x, y] = getPos(e);
     drawStroke(lastX, lastY, x, y);
     [lastX, lastY] = [x, y];
@@ -252,6 +283,12 @@ function setupWhiteboard() {
   canvas.addEventListener('touchend', () => drawing = false);
 
   window.drawOnCanvas = function(data) {
+    if (data.type === 'text') {
+      ctx.font = `${data.size}px sans-serif`;
+      ctx.fillStyle = data.color;
+      ctx.fillText(data.text, data.x, data.y);
+      return;
+    }
     ctx.strokeStyle = data.color;
     ctx.lineWidth = data.size;
     ctx.lineCap = 'round';

@@ -40,13 +40,14 @@
     <div id="rooms-list"></div>
   </main>
 
+  <script src="/js/config.js"></script>
   <script src="/js/app.js"></script>
   <script>
     async function createRoom() {
-      const me = await fetch('/api/me').then(r => r.json());
+      const me = await apiFetch('/api/me').then(r => r.json());
       if (!me.user) { location.href = '/login.html'; return; }
       const name = prompt('Room name (optional):') || '';
-      const res = await fetch('/api/rooms', {
+      const res = await apiFetch('/api/rooms', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name })
       });
       const data = await res.json();
@@ -59,9 +60,9 @@
     }
 
     async function loadRooms() {
-      const me = await fetch('/api/me').then(r => r.json());
+      const me = await apiFetch('/api/me').then(r => r.json());
       if (!me.user) return;
-      const rooms = await fetch('/api/rooms').then(r => r.json());
+      const rooms = await apiFetch('/api/rooms').then(r => r.json());
       document.getElementById('rooms-list').innerHTML = rooms.length ? `
         <h2>Recent Rooms</h2>
         <div class="rooms-grid">${rooms.map(r => `

@@ -1,5 +1,5 @@
 async function initAuth() {
-  const res = await fetch('/api/me');
+  const res = await apiFetch('/api/me');
   const { user } = await res.json();
   const userInfo = document.getElementById('user-info');
   const authLink = document.getElementById('auth-link');
@@ -11,7 +11,7 @@ async function initAuth() {
       authLink.href = '#';
       authLink.onclick = async (e) => {
         e.preventDefault();
-        await fetch('/api/logout', { method: 'POST' });
+        await apiFetch('/api/logout', { method: 'POST' });
         location.href = '/login.html';
       };
     }

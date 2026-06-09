@@ -30,6 +30,7 @@
       </form>
     </div>
   </main>
+  <script src="/js/config.js"></script>
   <script>
     function showTab(t) {
       document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
@@ -40,7 +41,7 @@
     async function handleLogin(e) {
       e.preventDefault();
       const f = e.target;
-      const res = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      const res = await apiFetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: f.username.value, password: f.password.value }) });
       if (res.ok) location.href = '/';
       else document.getElementById('login-error').textContent = (await res.json()).error;
@@ -48,7 +49,7 @@
     async function handleRegister(e) {
       e.preventDefault();
       const f = e.target;
-      const res = await fetch('/api/register', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      const res = await apiFetch('/api/register', { method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: f.username.value, password: f.password.value }) });
       if (res.ok) location.href = '/';
       else document.getElementById('register-error').textContent = (await res.json()).error;
