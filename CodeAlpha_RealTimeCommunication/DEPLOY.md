@@ -1,51 +1,77 @@
-# Deploy Full App — Netlify + Render
+# Deploy Backend on Render (Required for Login)
 
-The live Netlify URL serves the UI. The **backend must run on Render** for login, video, chat, and whiteboard.
+Your Netlify site needs a **Render backend** for register, login, video, and whiteboard.
 
-## Step 1 — Push code to GitHub
+**Netlify (UI):** https://codealpha-realtimecommunication.netlify.app  
+**Render (API):** https://codealpha-rtc.onrender.com
 
-```bash
-gh auth login
-cd CodeAlpha_RealTimeCommunication
-gh repo create CodeAlpha_RealTimeCommunication --public --source=. --remote=origin --push
-```
+---
 
-## Step 2 — Deploy backend on Render (required)
+## One-Click Deploy (Recommended)
 
-1. Open [Render Dashboard](https://dashboard.render.com)
-2. Sign in with **GitHub**
-3. Click **New +** → **Blueprint**
-4. Select repo: `CodeAlpha_RealTimeCommunication`
-5. Render reads `render.yaml` automatically
-6. Click **Apply** and wait ~5–10 minutes
+**Click this link** (log in to Render with GitHub if asked):
 
-Backend URL: **https://codealpha-realtimecommunication.onrender.com**
+👉 **[Deploy Blueprint on Render](https://dashboard.render.com/blueprint/new?repo=https://github.com/MuhammadJamshaid123/CodeAlpha-Developer)**
 
-## Step 3 — Netlify (already deployed)
+---
 
-Frontend URL: **https://codealpha-realtimecommunication.netlify.app**
+## Step-by-Step on [dashboard.render.com](https://dashboard.render.com/)
 
-Redeploy after changes:
+### 1. Open Render Dashboard
+- Go to https://dashboard.render.com/
+- Sign in (use **Continue with GitHub**)
 
-```bash
-netlify deploy --dir=public
-netlify api restoreSiteDeploy --data '{"site_id":"1ef6c10e-b2e2-4783-ab3b-5ea227e082b4","deploy_id":"YOUR_DEPLOY_ID"}'
-```
+### 2. Start Blueprint
+- Click **New +** (top right)
+- Select **Blueprint**
 
-## How it works
+### 3. Connect GitHub (first time only)
+- Click **Connect account** next to GitHub
+- Allow Render access to your repos
+- Find **`CodeAlpha-Developer`** → click **Connect**
 
-| Layer | Platform | Role |
-|-------|----------|------|
-| UI | Netlify | HTML, CSS, JS at `*.netlify.app` |
-| API + Socket.io | Render | Express, SQLite, WebRTC signaling |
+**Or use direct link:**  
+https://dashboard.render.com/blueprint/new?repo=https://github.com/MuhammadJamshaid123/CodeAlpha-Developer
 
-On Netlify, the frontend calls the Render API with session cookies (`config.js`).
+### 4. Review services
+Render reads `render.yaml` and shows **4 web services**:
+| Service | App |
+|---------|-----|
+| `codealpha-rtc` | **Real-Time Communication** ← needed for your Netlify link |
+| codealpha-ecommerce | E-commerce |
+| codealpha-social | Social Media |
+| codealpha-pm | Project Management |
 
-## Verify
+### 5. Deploy
+- Blueprint name: `codealpha-developer` (or any name)
+- Branch: **main**
+- Click **Apply** (or **Deploy Blueprint**)
+- Wait **5–10 minutes** for all builds to finish (green **Live** status)
 
+### 6. Verify backend
+Open: https://codealpha-rtc.onrender.com/api/health  
+You should see: `{"ok":true}`
+
+### 7. Test Netlify app
 1. Open https://codealpha-realtimecommunication.netlify.app
-2. Register a new account
-3. Create a room → allow camera/mic
-4. Open the same room in another tab/browser to test video & whiteboard
+2. Refresh the page (red warning should disappear)
+3. **Register** → create account → **Create New Room**
 
-> Free Render apps sleep after 15 min. First visit may take ~30 seconds to wake up.
+> Free Render apps sleep after 15 min. First visit may take ~30 seconds.
+
+---
+
+## Troubleshooting
+
+| Problem | Fix |
+|---------|-----|
+| Red banner on Netlify | Backend not deployed yet — complete steps above |
+| Build failed on Render | Open service → **Logs** → check Node 18+ and `npm install` |
+| Login fails after deploy | Hard refresh (Ctrl+F5) or clear site data for netlify.app |
+| Video not connecting | Allow camera/mic; use HTTPS (both Netlify and Render provide it) |
+
+---
+
+## GitHub Repo
+
+https://github.com/MuhammadJamshaid123/CodeAlpha-Developer

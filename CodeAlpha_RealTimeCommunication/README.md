@@ -40,8 +40,11 @@ Open [http://localhost:3004](http://localhost:3004)
 
 | Platform | URL | Purpose |
 |----------|-----|---------|
-| **Netlify** | https://codealpha-realtimecommunication.netlify.app | Static frontend (UI) |
-| **Render** | https://codealpha-realtimecommunication.onrender.com | Full backend (API, Socket.io, WebRTC) |
+| **Netlify** | https://codealpha-realtimecommunication.netlify.app | Frontend (UI) |
+| **Render** | https://codealpha-rtc.onrender.com | Backend (API, Socket.io, WebRTC) |
 
-Deploy frontend: `netlify deploy --prod --dir=public`
-Deploy backend: Connect this repo on [Render](https://dashboard.render.com) (uses `render.yaml`).
+### Deploy backend (required for login)
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://dashboard.render.com/blueprint/new?repo=https://github.com/MuhammadJamshaid123/CodeAlpha-Developer)
+
+Or see [DEPLOY.md](./DEPLOY.md) for full steps.

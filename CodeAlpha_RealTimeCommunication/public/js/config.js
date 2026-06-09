@@ -14,6 +14,8 @@ window.clearAuth = () => {
   localStorage.removeItem('rtc_username');
 };
 
+window.assetUrl = (url) => (url?.startsWith('/') ? `${window.API_BASE}${url}` : url);
+
 window.apiFetch = (url, options = {}) => {
   const headers = { ...options.headers };
   const token = localStorage.getItem('rtc_token');
@@ -36,6 +38,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (ok) return;
   const banner = document.createElement('div');
   banner.style.cssText = 'background:#e63946;color:#fff;padding:0.75rem 1rem;text-align:center;font-size:0.9rem;line-height:1.5;';
-  banner.innerHTML = '⚠️ Backend server is not running yet. Deploy on <a href="https://dashboard.render.com" target="_blank" rel="noopener" style="color:#fff;text-decoration:underline;">Render.com</a> using repo <strong>CodeAlpha-Developer</strong> → Blueprint → Apply. Then refresh this page.';
+  banner.innerHTML = '⚠️ Backend not running. <a href="https://dashboard.render.com/blueprint/new?repo=https://github.com/MuhammadJamshaid123/CodeAlpha-Developer" target="_blank" rel="noopener" style="color:#fff;text-decoration:underline;font-weight:bold;">Click here to deploy on Render</a> → sign in with GitHub → click <strong>Apply</strong> → wait 5 min → refresh this page.';
   document.body.prepend(banner);
 });
