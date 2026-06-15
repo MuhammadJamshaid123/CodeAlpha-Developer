@@ -1,8 +1,8 @@
 const express = require('express');
-const session = require('express-session');
 const path = require('path');
 const bcrypt = require('bcryptjs');
 const { ready } = require('./db');
+const { getSessionMiddleware } = require('../shared/session-config');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -11,16 +11,7 @@ let db;
 app.set('trust proxy', 1);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'codealpha-ecommerce-secret',
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    maxAge: 24 * 60 * 60 * 1000,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax'
-  }
-}));
+app.use(getSessionMiddleware({ secret: 'codealpha-ecommerce-secret', projectDir: __dirname }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 function requireAuth(req, res, next) {
@@ -28,7 +19,15 @@ function requireAuth(req, res, next) {
   next();
 }
 
-app.get('/api/health', (req, res) => res.json({ ok: true, database: db?.isPostgres ? 'postgresql' : 'sqlite' }));
+app.get('/api/health', async (req, res) => {
+  const row = await db.prepare('SELECT COUNT(*) as count FROM users').get();
+  res.json({
+    ok: true,
+    database: db?.isPostgres ? 'postgresql' : 'sqlite',
+    usersStored: Number(row.count),
+    message: 'User accounts are saved in the database on register/login'
+  });
+});
 
 app.post('/api/register', async (req, res) => {
   const { username, password, email } = req.body;
@@ -38,7 +37,7 @@ app.post('/api/register', async (req, res) => {
     const result = await db.prepare('INSERT INTO users (username, password, email) VALUES (?, ?, ?)').run(username, hash, email || '');
     req.session.userId = result.lastInsertRowid;
     req.session.username = username;
-    res.json({ success: true, username });
+    res.json({ success: true, username, userId: result.lastInsertRowid, storedInDatabase: true });
   } catch (e) {
     res.status(400).json({ error: 'Username already exists' });
   }

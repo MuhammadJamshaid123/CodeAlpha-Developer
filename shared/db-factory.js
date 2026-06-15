@@ -56,7 +56,10 @@ function wrapPostgres(pool) {
     };
   };
   return {
-    exec: async (sql) => { await pool.query(sql); },
+    exec: async (sql) => {
+      const statements = sql.split(';').map(s => s.trim()).filter(Boolean);
+      for (const s of statements) await pool.query(s);
+    },
     prepare,
     isPostgres: true
   };

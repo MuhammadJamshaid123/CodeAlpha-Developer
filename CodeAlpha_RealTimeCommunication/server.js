@@ -1,5 +1,4 @@
 const express = require('express');
-const session = require('express-session');
 const http = require('http');
 const crypto = require('crypto');
 const { Server } = require('socket.io');
@@ -10,6 +9,7 @@ const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
 const CryptoJS = require('crypto-js');
 const { ready } = require('./db');
+const { getSessionMiddleware } = require('../shared/session-config');
 
 const FRONTEND_URL = process.env.FRONTEND_URL || '';
 const ALLOWED_ORIGINS = [
@@ -48,14 +48,10 @@ app.use((req, res, next) => {
   next();
 });
 app.use(express.json());
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'codealpha-rtc-secret',
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
-  }
+app.use(getSessionMiddleware({
+  secret: 'codealpha-rtc-secret',
+  projectDir: __dirname,
+  cookieSameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
 }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(uploadsDir));
@@ -100,7 +96,7 @@ app.post('/api/register', async (req, res) => {
     req.session.userId = result.lastInsertRowid;
     req.session.username = username;
     const token = await createToken(result.lastInsertRowid);
-    res.json({ success: true, username, token });
+    res.json({ success: true, username, token, userId: result.lastInsertRowid, storedInDatabase: true });
   } catch (e) {
     res.status(400).json({ error: 'Username already exists' });
   }
@@ -126,7 +122,10 @@ app.post('/api/logout', async (req, res) => {
   res.json({ success: true });
 });
 
-app.get('/api/health', (req, res) => res.json({ ok: true, database: db?.isPostgres ? 'postgresql' : 'sqlite' }));
+app.get('/api/health', async (req, res) => {
+  const row = await db.prepare('SELECT COUNT(*) as count FROM users').get();
+  res.json({ ok: true, database: db?.isPostgres ? 'postgresql' : 'sqlite', usersStored: Number(row.count) });
+});
 
 app.get('/api/me', async (req, res) => {
   const user = await getUserFromRequest(req);

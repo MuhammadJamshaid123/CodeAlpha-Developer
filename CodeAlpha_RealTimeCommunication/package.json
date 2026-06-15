@@ -3,11 +3,16 @@
   "version": "1.0.0",
   "description": "CodeAlpha Task 4 - Real-Time Communication App",
   "main": "server.js",
-  "scripts": { "start": "node server.js" },
-  "engines": { "node": ">=18" },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "better-sqlite3": "^11.7.0",
+    "connect-pg-simple": "^10.0.0",
     "crypto-js": "^4.2.0",
     "express": "^4.21.2",
     "express-session": "^1.18.1",

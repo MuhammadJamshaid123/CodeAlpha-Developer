@@ -2,14 +2,33 @@
 
 Deploy all 4 CodeAlpha projects on [Railway](https://railway.app) with a **live PostgreSQL database** that persists your data.
 
-## How it works
+## How user data is stored
 
-| Environment | Database |
-|-------------|----------|
-| **Local** (`npm start`) | SQLite file (`db.sqlite3`) |
-| **Railway** (production) | PostgreSQL via `DATABASE_URL` |
+When a user **registers** or **logs in**:
 
-When Railway sets `DATABASE_URL`, each app automatically connects to PostgreSQL. No code changes needed after setup.
+1. **Register** → `INSERT INTO users` → saved in PostgreSQL on Railway
+2. **Login** → `SELECT FROM users` → reads from PostgreSQL
+3. **Session** → stored in PostgreSQL `session` table (when `DATABASE_URL` is set)
+4. **Posts, orders, tasks, rooms** → all saved in the same live database
+
+### Verify users are in the database
+
+After someone registers, check:
+```
+https://YOUR-APP.up.railway.app/api/health
+```
+
+Response:
+```json
+{
+  "ok": true,
+  "database": "postgresql",
+  "usersStored": 3,
+  "message": "User accounts are saved in the database on register/login"
+}
+```
+
+`usersStored` increases each time a new account is created.
 
 ---
 
@@ -127,7 +146,9 @@ https://github.com/MuhammadJamshaid123/CodeAlpha-Developer
 
 | Issue | Fix |
 |-------|-----|
-| Build fails | Check Railway logs; ensure root directory is correct |
+| Build fails / no package.json | Set **Root Directory** to app subfolder (not repo root) |
+| `Cannot find module '../shared/db-factory'` | Root Directory must be inside repo; `shared/` folder is at repo root |
+| Build fails on better-sqlite3 | Add PostgreSQL + `DATABASE_URL`; redeploy |
 | `database: sqlite` on live | Link `DATABASE_URL` from PostgreSQL service |
 | Login not working | Set `NODE_ENV=production` and redeploy |
 | WebRTC not working | Use HTTPS Railway URL; allow camera/mic |
