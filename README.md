@@ -15,7 +15,7 @@ All 4 tasks from the [CodeAlpha Full Stack Development Instructions](https://dri
 
 - **Frontend:** HTML, CSS, JavaScript
 - **Backend:** Express.js (Node.js) — Django alternative per instructions
-- **Database:** SQLite (better-sqlite3)
+- **Database:** SQLite (local) / PostgreSQL (Railway live)
 - **Real-time:** Socket.io + WebRTC
 
 ## Quick Start
@@ -46,15 +46,13 @@ Per CodeAlpha instructions:
 
 ## Live Deployment
 
-See [DEPLOY.md](./DEPLOY.md) for step-by-step instructions.
+| Platform | Guide | Purpose |
+|----------|-------|---------|
+| **Railway** | [RAILWAY.md](./RAILWAY.md) | Live apps + PostgreSQL database |
+| **Netlify** | [DEPLOY.md](./DEPLOY.md) | Portfolio landing page |
+| **Render** | [DEPLOY.md](./DEPLOY.md) | Alternative app hosting |
 
-| Project | Live URL |
-|---------|----------|
-| Landing Page (Netlify) | https://codealpha-developer.netlify.app |
-| E-commerce Store | https://codealpha-ecommerce.onrender.com |
-| Social Media | https://codealpha-social.onrender.com |
-| Project Management | https://codealpha-pm.onrender.com |
-| Real-Time Communication | https://codealpha-rtc.onrender.com |
+After Railway deploy, verify each app: `https://YOUR-APP.up.railway.app/api/health` → `"database": "postgresql"`
 
 ## Contact
 

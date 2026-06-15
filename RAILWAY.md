@@ -32,10 +32,31 @@ For each project, add a service:
 | pm | `CodeAlpha_ProjectManagement` |
 | rtc | `CodeAlpha_RealTimeCommunication` |
 
-**Per service settings:**
-- **Start command:** `npm start`
-- **Build command:** `npm install`
-- **Environment:** add `NODE_ENV=production`
+**Per service settings (CRITICAL):**
+
+1. Open service → **Settings** → **Source**
+2. Set **Root Directory** to the folder from the table above (e.g. `CodeAlpha_EcommerceStore`)
+3. **Start command:** `npm start`
+4. **Build command:** `npm install` (or leave empty — `nixpacks.toml` handles it)
+5. Add variable: `NODE_ENV` = `production`
+
+> **Build fails with "package.json not found"?** You forgot **Root Directory**. Railway must NOT deploy from repo root — each app lives in its own subfolder.
+
+---
+
+## Step 2b — Fix a failed build (your current service)
+
+If your [Railway build](https://railway.com) shows failed:
+
+1. Open the service → **Settings** → **Source**
+2. Set **Root Directory** — pick ONE:
+   - `CodeAlpha_EcommerceStore`
+   - `CodeAlpha_SocialMediaPlatform`
+   - `CodeAlpha_ProjectManagement`
+   - `CodeAlpha_RealTimeCommunication`
+3. Go to **Variables** → add `NODE_ENV` = `production`
+4. Add **PostgreSQL** → link `DATABASE_URL` (see Step 3)
+5. Click **Deploy** → **Redeploy**
 
 ---
 

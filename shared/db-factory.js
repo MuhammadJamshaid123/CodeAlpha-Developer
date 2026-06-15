@@ -84,7 +84,7 @@ async function createDb({ sqliteSchema, pgSchema, seed, sqlitePath, projectDir }
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
   const nativeDb = new Database(filePath);
   const db = wrapSqlite(nativeDb);
-  db.exec(sqliteSchema);
+  nativeDb.exec(sqliteSchema);
   if (seed) await seed(db);
   console.log(`Connected to SQLite at ${filePath}`);
   return db;
