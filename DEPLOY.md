@@ -6,7 +6,7 @@ These apps are **full-stack Node.js servers** (Express + SQLite + Socket.io). Th
 
 | Layer | Platform | URL |
 |-------|----------|-----|
-| Portfolio landing page | **Netlify** | Your Netlify site URL |
+| Portfolio landing page | **Netlify** | https://codealpha-developer.netlify.app |
 | 4 backend apps | **Render** (free) | `*.onrender.com` |
 
 ---

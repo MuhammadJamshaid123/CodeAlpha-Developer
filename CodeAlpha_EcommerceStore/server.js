@@ -2,10 +2,11 @@ const express = require('express');
 const session = require('express-session');
 const path = require('path');
 const bcrypt = require('bcryptjs');
-const db = require('./db');
+const { ready } = require('./db');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+let db;
 
 app.set('trust proxy', 1);
 app.use(express.json());
@@ -27,13 +28,14 @@ function requireAuth(req, res, next) {
   next();
 }
 
-// Auth
-app.post('/api/register', (req, res) => {
+app.get('/api/health', (req, res) => res.json({ ok: true, database: db?.isPostgres ? 'postgresql' : 'sqlite' }));
+
+app.post('/api/register', async (req, res) => {
   const { username, password, email } = req.body;
   if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
   try {
     const hash = bcrypt.hashSync(password, 10);
-    const result = db.prepare('INSERT INTO users (username, password, email) VALUES (?, ?, ?)').run(username, hash, email || '');
+    const result = await db.prepare('INSERT INTO users (username, password, email) VALUES (?, ?, ?)').run(username, hash, email || '');
     req.session.userId = result.lastInsertRowid;
     req.session.username = username;
     res.json({ success: true, username });
@@ -42,9 +44,9 @@ app.post('/api/register', (req, res) => {
   }
 });
 
-app.post('/api/login', (req, res) => {
+app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
-  const user = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
+  const user = await db.prepare('SELECT * FROM users WHERE username = ?').get(username);
   if (!user || !bcrypt.compareSync(password, user.password)) {
     return res.status(401).json({ error: 'Invalid credentials' });
   }
@@ -63,25 +65,22 @@ app.get('/api/me', (req, res) => {
   res.json({ user: { id: req.session.userId, username: req.session.username } });
 });
 
-// Products
-app.get('/api/products', (req, res) => {
-  const products = db.prepare('SELECT * FROM products').all();
-  res.json(products);
+app.get('/api/products', async (req, res) => {
+  res.json(await db.prepare('SELECT * FROM products').all());
 });
 
-app.get('/api/products/:id', (req, res) => {
-  const product = db.prepare('SELECT * FROM products WHERE id = ?').get(req.params.id);
+app.get('/api/products/:id', async (req, res) => {
+  const product = await db.prepare('SELECT * FROM products WHERE id = ?').get(req.params.id);
   if (!product) return res.status(404).json({ error: 'Product not found' });
   res.json(product);
 });
 
-// Cart (session-based)
-app.get('/api/cart', (req, res) => {
+app.get('/api/cart', async (req, res) => {
   const cart = req.session.cart || {};
   const items = [];
   let total = 0;
   for (const [pid, qty] of Object.entries(cart)) {
-    const product = db.prepare('SELECT * FROM products WHERE id = ?').get(pid);
+    const product = await db.prepare('SELECT * FROM products WHERE id = ?').get(pid);
     if (product) {
       items.push({ product, quantity: qty, subtotal: product.price * qty });
       total += product.price * qty;
@@ -90,9 +89,9 @@ app.get('/api/cart', (req, res) => {
   res.json({ items, total });
 });
 
-app.post('/api/cart/add', (req, res) => {
+app.post('/api/cart/add', async (req, res) => {
   const { productId, quantity = 1 } = req.body;
-  const product = db.prepare('SELECT * FROM products WHERE id = ?').get(productId);
+  const product = await db.prepare('SELECT * FROM products WHERE id = ?').get(productId);
   if (!product) return res.status(404).json({ error: 'Product not found' });
   if (!req.session.cart) req.session.cart = {};
   req.session.cart[productId] = (req.session.cart[productId] || 0) + quantity;
@@ -113,8 +112,7 @@ app.post('/api/cart/remove', (req, res) => {
   res.json({ success: true });
 });
 
-// Orders
-app.post('/api/orders', requireAuth, (req, res) => {
+app.post('/api/orders', requireAuth, async (req, res) => {
   const cart = req.session.cart || {};
   const entries = Object.entries(cart);
   if (entries.length === 0) return res.status(400).json({ error: 'Cart is empty' });
@@ -122,34 +120,40 @@ app.post('/api/orders', requireAuth, (req, res) => {
   let total = 0;
   const items = [];
   for (const [pid, qty] of entries) {
-    const product = db.prepare('SELECT * FROM products WHERE id = ?').get(pid);
+    const product = await db.prepare('SELECT * FROM products WHERE id = ?').get(pid);
     if (product) {
       total += product.price * qty;
       items.push({ product, quantity: qty });
     }
   }
 
-  const orderResult = db.prepare('INSERT INTO orders (user_id, total, status) VALUES (?, ?, ?)').run(req.session.userId, total, 'confirmed');
+  const orderResult = await db.prepare('INSERT INTO orders (user_id, total, status) VALUES (?, ?, ?)').run(req.session.userId, total, 'confirmed');
   const insertItem = db.prepare('INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)');
-  items.forEach(({ product, quantity }) => {
-    insertItem.run(orderResult.lastInsertRowid, product.id, quantity, product.price);
-  });
+  for (const { product, quantity } of items) {
+    await insertItem.run(orderResult.lastInsertRowid, product.id, quantity, product.price);
+  }
 
   req.session.cart = {};
   res.json({ success: true, orderId: orderResult.lastInsertRowid, total });
 });
 
-app.get('/api/orders', requireAuth, (req, res) => {
-  const orders = db.prepare('SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC').all(req.session.userId);
-  const ordersWithItems = orders.map(order => {
-    const items = db.prepare(`
+app.get('/api/orders', requireAuth, async (req, res) => {
+  const orders = await db.prepare('SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC').all(req.session.userId);
+  const ordersWithItems = await Promise.all(orders.map(async (order) => {
+    const items = await db.prepare(`
       SELECT oi.*, p.name, p.image FROM order_items oi
       JOIN products p ON p.id = oi.product_id
       WHERE oi.order_id = ?
     `).all(order.id);
     return { ...order, items };
-  });
+  }));
   res.json(ordersWithItems);
 });
 
-app.listen(PORT, () => console.log(`E-commerce Store running at http://localhost:${PORT}`));
+ready.then((d) => {
+  db = d;
+  app.listen(PORT, () => console.log(`E-commerce Store running at http://localhost:${PORT}`));
+}).catch((err) => {
+  console.error('Database connection failed:', err);
+  process.exit(1);
+});

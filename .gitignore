@@ -3,3 +3,6 @@ uploads/
 *.sqlite3
 .env
 .DS_Store
+
+# Local Netlify folder
+.netlify

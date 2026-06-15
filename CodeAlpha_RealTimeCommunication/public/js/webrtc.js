@@ -183,7 +183,7 @@ function addSharedFile(file) {
   const div = document.createElement('div');
   div.className = 'shared-file';
   const encrypted = file.encrypted ? ' 🔒' : '';
-  div.innerHTML = `<a href="${file.url}" target="_blank" download>📎 ${file.filename}${encrypted}</a> <small>by ${file.sharedBy || 'you'}</small>`;
+  div.innerHTML = `<a href="${assetUrl(file.url)}" target="_blank" download>📎 ${file.filename}${encrypted}</a> <small>by ${file.sharedBy || 'you'}</small>`;
   el.appendChild(div);
 }
 

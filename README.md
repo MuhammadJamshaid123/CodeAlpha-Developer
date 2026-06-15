@@ -50,7 +50,7 @@ See [DEPLOY.md](./DEPLOY.md) for step-by-step instructions.
 
 | Project | Live URL |
 |---------|----------|
-| Landing Page (Netlify) | Use URL from your Netlify dashboard after deploy |
+| Landing Page (Netlify) | https://codealpha-developer.netlify.app |
 | E-commerce Store | https://codealpha-ecommerce.onrender.com |
 | Social Media | https://codealpha-social.onrender.com |
 | Project Management | https://codealpha-pm.onrender.com |
